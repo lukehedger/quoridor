@@ -55,13 +55,56 @@ const Quoridor = Game({
   }),
 });
 
-const QuoridorBoard = () => {
-  // TODO: Render board with pieces and move event
+const QuoridorBoard = React.memo((props) => {
   return (
-    <div>
-      Quoridor!
-    </div>
+    <>
+      <div style={{ width: '400px' }}>
+        {['9', '8', '7', '6', '5', '4', '3', '2', '1'].map(row => (
+          <QuoridorBoardRow
+            G={props.G}
+            key={row}
+            moves={props.moves}
+            rowID={row} />
+        ))}
+      </div>
+
+      {props.ctx.gameover && (
+        <h2>Player {props.ctx.gameover.winner} wins!</h2>
+      )}
+    </>
   );
+});
+
+const QuoridorBoardRow = (props) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+      }}>
+      {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'].map(square => (
+        <QuoridorBoardSquare
+          G={props.G}
+          key={`${square} ${props.rowID}`}
+          moves={props.moves}
+          squareID={`${square}${props.rowID}`} />
+      ))}
+    </div>
+  )
+}
+
+const QuoridorBoardSquare = (props) => {   
+  return (
+    <div
+      onClick={() => props.moves.movePiece(props.squareID)}
+      style={{ border: '1px solid', flex: '1', height: '40px', width: '40px' }}>
+      {(props.G.piecePositions['0'] === props.squareID && (
+        <p>0</p>
+      )) || (props.G.piecePositions['1'] === props.squareID && (
+        <p>1</p>
+      ))}
+    </div>
+  )
 }
 
 const App = Client({

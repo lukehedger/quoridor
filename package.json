@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "boardgame.io": "0.31.1",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0"
+    "react": "16.7.0",
+    "react-dom": "16.7.0"
   },
   "devDependencies": {
     "react-scripts": "2.1.3"
