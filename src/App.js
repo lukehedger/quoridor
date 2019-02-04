@@ -2,14 +2,32 @@ import React from "react";
 import { Game, INVALID_MOVE } from "boardgame.io/core";
 import { Client } from "boardgame.io/react";
 
-const isValidPieceMove = (currentSquare, nextSquare) => {
-  if (currentSquare === nextSquare) {
+const isValidPieceMove = (currentSquare, nextSquare, piecePositions) => {
+  if (typeof currentSquare === "undefined") {
     return false;
   }
 
-  // TODO: one square at a time - up, down, right or left - NOT diagonal
-  // Ex. currentSquare = e9 => possibleSquares = e8, d9, f9
-  // Ex. currentSquare = e8 => possibleSquares = e7, d8, f8, e9
+  if (typeof nextSquare === "undefined") {
+    return false;
+  }
+
+  if (
+    nextSquare === piecePositions["0"] ||
+    nextSquare === piecePositions["1"]
+  ) {
+    return false;
+  }
+
+  const validMoves = [
+    movePieceUp(currentSquare),
+    movePieceRight(currentSquare),
+    movePieceDown(currentSquare),
+    movePieceLeft(currentSquare),
+  ];
+
+  if (!validMoves.includes(nextSquare)) {
+    return false;
+  }
 
   return true;
 };
@@ -25,6 +43,63 @@ const isVictory = (currentPlayer, piecePositions) => {
   return false;
 };
 
+const movePieceDown = currentSquare => {
+  const rows = ["9", "8", "7", "6", "5", "4", "3", "2", "1"];
+
+  const [currentColumn, currentRow] = currentSquare.split("");
+
+  const rowBelowCurrentSquare = rows[rows.indexOf(currentRow) + 1];
+
+  if (typeof rowBelowCurrentSquare === "undefined") {
+    return null;
+  }
+
+  return `${currentColumn}${rowBelowCurrentSquare}`;
+};
+
+const movePieceLeft = currentSquare => {
+  const columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
+
+  const [currentColumn, currentRow] = currentSquare.split("");
+
+  const columnLeftOfCurrentSquare = columns[columns.indexOf(currentColumn) - 1];
+
+  if (typeof columnLeftOfCurrentSquare === "undefined") {
+    return null;
+  }
+
+  return `${columnLeftOfCurrentSquare}${currentRow}`;
+};
+
+const movePieceRight = currentSquare => {
+  const columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
+
+  const [currentColumn, currentRow] = currentSquare.split("");
+
+  const columnRightOfCurrentSquare =
+    columns[columns.indexOf(currentColumn) + 1];
+
+  if (typeof columnRightOfCurrentSquare === "undefined") {
+    return null;
+  }
+
+  return `${columnRightOfCurrentSquare}${currentRow}`;
+};
+
+const movePieceUp = currentSquare => {
+  const rows = ["9", "8", "7", "6", "5", "4", "3", "2", "1"];
+
+  const [currentColumn, currentRow] = currentSquare.split("");
+
+  const rowAboveCurrentSquare = rows[rows.indexOf(currentRow) - 1];
+
+  if (typeof rowAboveCurrentSquare === "undefined") {
+    return null;
+  }
+
+  return `${currentColumn}${rowAboveCurrentSquare}`;
+};
+
 const Quoridor = Game({
   flow: {
     endGameIf: (G, ctx) => {
@@ -38,7 +113,13 @@ const Quoridor = Game({
   },
   moves: {
     movePiece(G, ctx, square) {
-      if (!isValidPieceMove(G.piecePositions[ctx.currentPlayer], square)) {
+      if (
+        !isValidPieceMove(
+          G.piecePositions[ctx.currentPlayer],
+          square,
+          G.piecePositions
+        )
+      ) {
         return INVALID_MOVE;
       }
 
