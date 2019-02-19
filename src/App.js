@@ -2,7 +2,9 @@ import React from "react";
 import { Game, INVALID_MOVE } from "boardgame.io/core";
 import { Client } from "boardgame.io/react";
 
-const isValidPieceMove = (currentSquare, nextSquare, piecePositions) => {
+const isValidPieceMove = (currentPlayer, nextSquare, piecePositions) => {
+  const currentSquare = piecePositions[currentPlayer];
+
   if (typeof currentSquare === "undefined") {
     return false;
   }
@@ -18,11 +20,15 @@ const isValidPieceMove = (currentSquare, nextSquare, piecePositions) => {
     return false;
   }
 
+  const opponent = currentPlayer === "0" ? "1" : "0";
+
+  const opponentSquare = piecePositions[opponent];
+
   const validMoves = [
-    movePieceUp(currentSquare),
-    movePieceRight(currentSquare),
-    movePieceDown(currentSquare),
-    movePieceLeft(currentSquare),
+    movePieceUp(currentSquare, opponentSquare),
+    movePieceRight(currentSquare, opponentSquare),
+    movePieceDown(currentSquare, opponentSquare),
+    movePieceLeft(currentSquare, opponentSquare),
   ];
 
   if (!validMoves.includes(nextSquare)) {
@@ -43,7 +49,7 @@ const isVictory = (currentPlayer, piecePositions) => {
   return false;
 };
 
-const movePieceDown = currentSquare => {
+const movePieceDown = (currentSquare, opponentSquare) => {
   const rows = ["9", "8", "7", "6", "5", "4", "3", "2", "1"];
 
   const [currentColumn, currentRow] = currentSquare.split("");
@@ -54,10 +60,22 @@ const movePieceDown = currentSquare => {
     return null;
   }
 
-  return `${currentColumn}${rowBelowCurrentSquare}`;
+  let move = `${currentColumn}${rowBelowCurrentSquare}`;
+
+  // If opponent's piece occupies square of a normal valid move
+  // current player's piece may "jump" it
+  if (opponentSquare === move) {
+    const [, opponentRow] = opponentSquare.split("");
+
+    const rowBelowOpponentSquare = rows[rows.indexOf(opponentRow) + 1];
+
+    move = `${currentColumn}${rowBelowOpponentSquare}`;
+  }
+
+  return move;
 };
 
-const movePieceLeft = currentSquare => {
+const movePieceLeft = (currentSquare, opponentSquare) => {
   const columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
 
   const [currentColumn, currentRow] = currentSquare.split("");
@@ -68,10 +86,23 @@ const movePieceLeft = currentSquare => {
     return null;
   }
 
-  return `${columnLeftOfCurrentSquare}${currentRow}`;
+  let move = `${columnLeftOfCurrentSquare}${currentRow}`;
+
+  // If opponent's piece occupies square of a normal valid move
+  // current player's piece may "jump" it
+  if (opponentSquare === move) {
+    const [opponentColumn] = opponentSquare.split("");
+
+    const columnLeftOfOpponentSquare =
+      columns[columns.indexOf(opponentColumn) - 1];
+
+    move = `${columnLeftOfOpponentSquare}${currentRow}`;
+  }
+
+  return move;
 };
 
-const movePieceRight = currentSquare => {
+const movePieceRight = (currentSquare, opponentSquare) => {
   const columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
 
   const [currentColumn, currentRow] = currentSquare.split("");
@@ -83,10 +114,23 @@ const movePieceRight = currentSquare => {
     return null;
   }
 
-  return `${columnRightOfCurrentSquare}${currentRow}`;
+  let move = `${columnRightOfCurrentSquare}${currentRow}`;
+
+  // If opponent's piece occupies square of a normal valid move
+  // current player's piece may "jump" it
+  if (opponentSquare === move) {
+    const [opponentColumn] = opponentSquare.split("");
+
+    const columnRightOfOpponentSquare =
+      columns[columns.indexOf(opponentColumn) + 1];
+
+    move = `${columnRightOfOpponentSquare}${currentRow}`;
+  }
+
+  return move;
 };
 
-const movePieceUp = currentSquare => {
+const movePieceUp = (currentSquare, opponentSquare) => {
   const rows = ["9", "8", "7", "6", "5", "4", "3", "2", "1"];
 
   const [currentColumn, currentRow] = currentSquare.split("");
@@ -97,7 +141,19 @@ const movePieceUp = currentSquare => {
     return null;
   }
 
-  return `${currentColumn}${rowAboveCurrentSquare}`;
+  let move = `${currentColumn}${rowAboveCurrentSquare}`;
+
+  // If opponent's piece occupies square of a normal valid move
+  // current player's piece may "jump" it
+  if (opponentSquare === move) {
+    const [, opponentRow] = opponentSquare.split("");
+
+    const rowAboveOpponentSquare = rows[rows.indexOf(opponentRow) - 1];
+
+    move = `${currentColumn}${rowAboveOpponentSquare}`;
+  }
+
+  return move;
 };
 
 const Quoridor = Game({
@@ -113,13 +169,7 @@ const Quoridor = Game({
   },
   moves: {
     movePiece(G, ctx, square) {
-      if (
-        !isValidPieceMove(
-          G.piecePositions[ctx.currentPlayer],
-          square,
-          G.piecePositions
-        )
-      ) {
+      if (!isValidPieceMove(ctx.currentPlayer, square, G.piecePositions)) {
         return INVALID_MOVE;
       }
 
