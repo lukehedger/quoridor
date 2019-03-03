@@ -156,6 +156,20 @@ const movePieceUp = (currentSquare, opponentSquare) => {
   return move;
 };
 
+/**
+ * movePiece
+ * @param {Object} G
+ * @param {Object} ctx
+ * @param {String} square
+ */
+export function movePiece(G, ctx, square) {
+  if (!isValidPieceMove(ctx.currentPlayer, square, G.piecePositions)) {
+    return INVALID_MOVE;
+  }
+
+  G.piecePositions[ctx.currentPlayer] = square;
+}
+
 const Quoridor = Game({
   flow: {
     endGameIf: (G, ctx) => {
@@ -167,15 +181,7 @@ const Quoridor = Game({
     },
     movesPerTurn: 1,
   },
-  moves: {
-    movePiece(G, ctx, square) {
-      if (!isValidPieceMove(ctx.currentPlayer, square, G.piecePositions)) {
-        return INVALID_MOVE;
-      }
-
-      G.piecePositions[ctx.currentPlayer] = square;
-    },
-  },
+  moves: { movePiece },
   name: "Quoridor",
   setup: () => ({
     // TODO: Design game state to accommodate piece appearance (eg. colour) and walls
