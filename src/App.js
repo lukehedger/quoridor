@@ -2,6 +2,15 @@ import React from "react";
 import { Game, INVALID_MOVE } from "boardgame.io/core";
 import { Client } from "boardgame.io/react";
 
+const pieceAppearance = {
+  "0": {
+    colour: "#413AE3",
+  },
+  "1": {
+    colour: "#E35D7F",
+  },
+};
+
 const isValidPieceMove = (currentPlayer, nextSquare, piecePositions) => {
   const currentSquare = piecePositions[currentPlayer];
 
@@ -178,30 +187,54 @@ const Quoridor = Game({
   },
   name: "Quoridor",
   setup: () => ({
-    // TODO: Design game state to accommodate piece appearance (eg. colour) and walls
     piecePositions: {
       "0": "e9",
       "1": "e1",
     },
+    wallPositions: new Array(20).fill(""),
   }),
 });
 
 const QuoridorBoard = React.memo(props => {
+  const [selectedWall, setSelectedWall] = React.useState();
+
   return (
-    <>
+    <div style={{ display: "flex" }}>
       <div style={{ width: "400px" }}>
         {["9", "8", "7", "6", "5", "4", "3", "2", "1"].map(row => (
           <QuoridorBoardRow
             G={props.G}
             key={row}
             moves={props.moves}
+            moveWall={() => {
+              if (typeof selectedWall === "undefined") return;
+
+              // TODO: Set wallPositions[selectedWall] to coords e.g. "e3h"
+            }}
             rowID={row}
           />
         ))}
       </div>
 
+      <div style={{ marginLeft: "16px" }}>
+        {props.G.wallPositions.map((wallPosition, index) => {
+          return (
+            <QuoridorWall
+              key={index}
+              selectWall={() =>
+                index === selectedWall
+                  ? setSelectedWall()
+                  : setSelectedWall(index)
+              }
+              wallPosition={wallPosition}
+              wallSelected={index === selectedWall}
+            />
+          );
+        })}
+      </div>
+
       {props.ctx.gameover && <h2>Player {props.ctx.gameover.winner} wins!</h2>}
-    </>
+    </div>
   );
 });
 
@@ -218,6 +251,7 @@ const QuoridorBoardRow = props => {
           G={props.G}
           key={`${square} ${props.rowID}`}
           moves={props.moves}
+          moveWall={props.moveWall}
           squareID={`${square}${props.rowID}`}
         />
       ))}
@@ -228,12 +262,58 @@ const QuoridorBoardRow = props => {
 const QuoridorBoardSquare = props => {
   return (
     <div
-      onClick={() => props.moves.movePiece(props.squareID)}
-      style={{ border: "1px solid", flex: "1", height: "40px", width: "40px" }}
+      onClick={() => {
+        props.moveWall();
+
+        props.moves.movePiece(props.squareID);
+      }}
+      style={{
+        alignItems: "center",
+        border: "1px solid",
+        display: "flex",
+        flex: "1",
+        justifyContent: "center",
+        height: "40px",
+        width: "40px",
+      }}
     >
-      {(props.G.piecePositions["0"] === props.squareID && <p>0</p>) ||
-        (props.G.piecePositions["1"] === props.squareID && <p>1</p>)}
+      {(props.G.piecePositions["0"] === props.squareID && (
+        <QuoridorPiece pieceID="0" />
+      )) ||
+        (props.G.piecePositions["1"] === props.squareID && (
+          <QuoridorPiece pieceID="1" />
+        ))}
     </div>
+  );
+};
+
+const QuoridorPiece = props => {
+  return (
+    <div
+      style={{
+        backgroundColor: pieceAppearance[props.pieceID].colour,
+        borderRadius: "50%",
+        height: "28px",
+        width: "28px",
+      }}
+    />
+  );
+};
+
+const QuoridorWall = props => {
+  // TODO: Calculate `position` based on props.wallPosition e.g. "e3h"
+  return (
+    <div
+      onClick={() => props.selectWall()}
+      style={{
+        backgroundColor: "#9D828D",
+        cursor: "pointer",
+        height: "8px",
+        margin: "8px",
+        opacity: props.wallSelected ? 0.5 : 1,
+        width: "80px",
+      }}
+    />
   );
 };
 
